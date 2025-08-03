@@ -142,7 +142,7 @@ body, html {
     100% { transform: translateX(0); }
 }
 
-#password-container {
+#password-container, #api-key-container {
     display: flex;
     flex-direction: column;
     align-items: center;
