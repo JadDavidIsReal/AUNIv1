@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NOTE: API keys are placeholders and should be securely managed.
     // In a real application, these would be injected by a backend or a build process.
     const DEEPGRAM_API_KEY = 'cc186bd29115880294e05418214099ffff5497b8';
-    const OPENROUTER_API_KEY = 'cc186bd29115880294e05418214099ffff5497b8';
+    const OPENROUTER_API_KEY = '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';
     const OPENROUTER_MODEL = 'deepseek/deepseek-v2-chat';
 
     // --- DOM Elements ---
