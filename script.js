@@ -91,10 +91,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Simple validation: make a test request to OpenRouter
         try {
-            const response = await fetch("https://openrouter.ai/api/v1/models", {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
                 headers: {
+                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${key}`,
-                }
+                },
+                body: JSON.stringify({
+                    model: OPENROUTER_MODEL,
+                    messages: [{ role: "user", content: "Hello" }],
+                }),
             });
             if (response.ok) {
                 OPENROUTER_API_KEY = key;
@@ -288,7 +294,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error fetching from OpenRouter:", error);
-            displayError("I'm having trouble connecting to my brain.");
+            orb.classList.add('disturbed');
+            setTimeout(() => {
+                orb.classList.remove('disturbed');
+            }, 300);
+            displayError("There was a problem responding. Please try again.");
             return null;
         } finally {
             orb.classList.remove('responding');
