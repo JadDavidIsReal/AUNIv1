@@ -69,6 +69,10 @@ body, html {
 }
 
 /* Orb States */
+#orb.ready {
+    border: 2px solid rgba(0, 174, 255, 0.5);
+}
+
 #orb.listening {
     transform: scale(1.1);
     box-shadow:
