@@ -96,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${key}`,
+                    "HTTP-Referer": "https://auni.com", // Or your domain
+                    "X-Title": "AUNI", // Or your app name
                 },
                 body: JSON.stringify({
                     model: OPENROUTER_MODEL,
@@ -285,7 +287,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "HTTP-Referer": `${window.location.protocol}//${window.location.host}`, // Required by some models
+                    "HTTP-Referer": "https://auni.com", // Or your domain
+                    "X-Title": "AUNI", // Or your app name
                 },
                 body: JSON.stringify({
                     model: OPENROUTER_MODEL,
