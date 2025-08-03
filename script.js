@@ -186,12 +186,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Handle incoming transcripts
         connection.on('transcript', (data) => {
+            console.log('Deepgram transcript data:', data);
             const transcript = data.channel.alternatives[0].transcript;
             if (transcript) {
+                console.log('Transcript received:', transcript);
                 userCommandDisplay.textContent = transcript;
             }
             // When we get a final transcript, stop listening and process it.
             if (data.is_final && transcript.trim()) {
+                console.log('Final transcript received:', transcript);
                 stopListening(transcript);
             }
         });
@@ -270,6 +273,12 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const getAIResponse = async (transcript) => {
         orb.classList.add('responding');
+        const fetchBody = {
+            model: OPENROUTER_MODEL,
+            messages: [{ role: "user", content: transcript }],
+        };
+        console.log("Sending to OpenRouter:", JSON.stringify(fetchBody, null, 2));
+
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
@@ -286,10 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorBody = await response.text();
+                console.error("OpenRouter Error Body:", errorBody);
                 throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`);
             }
 
             const data = await response.json();
+            console.log("OpenRouter Response:", JSON.stringify(data, null, 2));
             return data.choices[0].message.content;
 
         } catch (error) {
