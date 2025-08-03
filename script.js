@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Handles potential errors if the SDK fails to load or initialize.
      */
     try {
-        const { createClient } = deepgram;
+        const { createClient } = window.deepgram;
         deepgramClient = createClient(DEEPGRAM_API_KEY);
     } catch (error) {
         console.error("Failed to create Deepgram client:", error);
