@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Constants and Configuration ---
     // NOTE: API keys are placeholders and should be securely managed.
     // In a real application, these would be injected by a backend or a build process.
-    const DEEPGRAM_API_KEY = 'YOUR_DEEPGRAM_API_KEY';
-    const OPENROUTER_API_KEY = 'YOUR_OPENROUTER_API_KEY';
+    const DEEPGRAM_API_KEY = 'cc186bd29115880294e05418214099ffff5497b8';
+    const OPENROUTER_API_KEY = 'cc186bd29115880294e05418214099ffff5497b8';
     const OPENROUTER_MODEL = 'deepseek/deepseek-v2-chat';
 
     // --- DOM Elements ---
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let microphone;     // The MediaRecorder instance for microphone input
     let isListening = false;      // True when the assistant is actively listening
     let spacebarPressed = false;  // True when the spacebar is being held down
+    let isLocked = true;          // True when the assistant is locked
 
     // --- Initialization ---
 
@@ -55,21 +56,27 @@ document.addEventListener('DOMContentLoaded', () => {
      * Initializes the application, checking for API keys and pre-loading the microphone.
      */
     const initialize = () => {
-        if (DEEPGRAM_API_KEY === 'YOUR_DEEPGRAM_API_KEY' || OPENROUTER_API_KEY === 'YOUR_OPENROUTER_API_KEY') {
-            displayError("API keys are not configured. Please set them in script.js.");
-            return;
-        }
+        orb.classList.add('locked');
+        displayError("Enter password to unlock.");
+    };
 
-        // Asynchronously get microphone access when the page loads.
-        getMicrophone().then(mic => {
-            if (mic) {
-                microphone = mic;
-                orb.classList.add('ready');
-                displayError("Hold spacebar to talk."); // Initial prompt
-                setTimeout(() => resetUI(true), 3000);
-            }
-            // If mic is null, getMicrophone() already displayed an error.
-        });
+    const unlockAssistant = (password) => {
+        if (password === '123123') {
+            isLocked = false;
+            orb.classList.remove('locked');
+            // Asynchronously get microphone access when the page loads.
+            getMicrophone().then(mic => {
+                if (mic) {
+                    microphone = mic;
+                    orb.classList.add('ready');
+                    displayError("Hold spacebar to talk."); // Initial prompt
+                    setTimeout(() => resetUI(true), 3000);
+                }
+                // If mic is null, getMicrophone() already displayed an error.
+            });
+        } else {
+            displayError("Incorrect password.");
+        }
     };
 
     // --- Core Functions ---
@@ -292,8 +299,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the application when the DOM is ready.
     initialize();
 
+    let passwordInput = '';
     // Listen for spacebar press to start listening.
     window.addEventListener('keydown', (e) => {
+        if (isLocked) {
+            if (e.key === 'Enter') {
+                unlockAssistant(passwordInput);
+                passwordInput = '';
+            } else if (e.key.length === 1) {
+                passwordInput += e.key;
+            }
+            return;
+        }
+
         if (e.code === 'Space' && !spacebarPressed) {
             e.preventDefault();
             spacebarPressed = true;
