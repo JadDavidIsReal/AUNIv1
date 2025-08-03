@@ -48,31 +48,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Asynchronously get microphone access when the page loads.
-    getMicrophone().then(mic => {
-        microphone = mic;
-    });
+    /**
+     * Initializes the application, checking for API keys and pre-loading the microphone.
+     */
+    const initialize = () => {
+        if (DEEPGRAM_API_KEY === 'YOUR_DEEPGRAM_API_KEY' || OPENROUTER_API_KEY === 'YOUR_OPENROUTER_API_KEY') {
+            displayError("API keys are not configured. Please set them in script.js.");
+            return;
+        }
+
+        // Asynchronously get microphone access when the page loads.
+        getMicrophone().then(mic => {
+            if (mic) {
+                microphone = mic;
+                orb.classList.add('ready');
+                displayError("Hold spacebar to talk."); // Initial prompt
+                setTimeout(() => resetUI(true), 3000);
+            }
+            // If mic is null, getMicrophone() already displayed an error.
+        });
+    };
 
     // --- Core Functions ---
 
     /**
      * Starts the listening process by connecting to Deepgram and capturing microphone input.
      */
-    const startListening = () => {
-        if (!microphone || isListening || !spacebarPressed) return;
+    const startListening = async () => {
+        if (isListening || !spacebarPressed) return;
+
+        // Ensure we have a microphone
+        if (!microphone) {
+            microphone = await getMicrophone();
+            if (!microphone) {
+                // The getMicrophone function will have already displayed an error
+                spacebarPressed = false; // Reset spacebar state
+                return;
+            }
+        }
 
         isListening = true;
+        orb.classList.remove('ready');
         orb.classList.add('listening');
         userCommandDisplay.textContent = 'Listening...';
         userCommandDisplay.style.opacity = '1';
         assistantResponseContainer.style.opacity = '0';
 
-        // Create a new live transcription connection
-        connection = deepgramClient.listen.live({
-            model: 'nova-2',
-            smart_format: true,
-            interim_results: true, // Get transcripts as the user speaks
-        });
+        try {
+            // Ensure Deepgram client is ready
+            if (!deepgramClient) {
+                throw new Error("Deepgram client not initialized.");
+            }
+
+            // Create a new live transcription connection
+            connection = deepgramClient.listen.live({
+                model: 'nova-2',
+                smart_format: true,
+                interim_results: true, // Get transcripts as the user speaks
+            });
+        } catch (error) {
+            console.error("Error creating Deepgram connection:", error);
+            displayError("Could not start transcription service.");
+            resetUI();
+            return;
+        }
 
         // Handle the connection opening
         connection.on('open', () => {
@@ -231,16 +270,24 @@ document.addEventListener('DOMContentLoaded', () => {
         isListening = false;
         spacebarPressed = false;
         orb.classList.remove('listening', 'responding');
+        orb.classList.add('ready'); // Return to ready state
+
         if (hideCommand) {
             // After a delay, fade out the text areas for a cleaner look.
             setTimeout(() => {
                 userCommandDisplay.style.opacity = '0';
                 assistantResponseContainer.style.opacity = '0';
+                 // Clear content after fading out
+                userCommandDisplay.textContent = '';
+                assistantResponseDisplay.textContent = '';
             }, 3000);
         }
     };
 
     // --- Event Listeners ---
+
+    // Initialize the application when the DOM is ready.
+    initialize();
 
     // Listen for spacebar press to start listening.
     window.addEventListener('keydown', (e) => {
