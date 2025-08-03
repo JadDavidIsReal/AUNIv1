@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elements ---
     const orb = document.getElementById('orb');
+    const passwordContainer = document.getElementById('password-container');
+    const passwordInput = document.getElementById('password-input');
+    const passwordSubmit = document.getElementById('password-submit');
     const userCommandDisplay = document.getElementById('user-command');
     const assistantResponseContainer = document.getElementById('assistant-response-container');
     const assistantResponseDisplay = document.getElementById('assistant-response');
@@ -60,10 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
         displayError("Enter password to unlock.");
     };
 
-    const unlockAssistant = (password) => {
+    const unlockAssistant = () => {
+        const password = passwordInput.value;
         if (password === '123123') {
             isLocked = false;
             orb.classList.remove('locked');
+            passwordContainer.style.display = 'none';
             // Asynchronously get microphone access when the page loads.
             getMicrophone().then(mic => {
                 if (mic) {
@@ -75,7 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If mic is null, getMicrophone() already displayed an error.
             });
         } else {
+            orb.classList.add('disturbed');
+            setTimeout(() => {
+                orb.classList.remove('disturbed');
+            }, 300);
             displayError("Incorrect password.");
+            passwordInput.value = '';
         }
     };
 
@@ -299,18 +309,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the application when the DOM is ready.
     initialize();
 
-    let passwordInput = '';
+    passwordSubmit.addEventListener('click', unlockAssistant);
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            unlockAssistant();
+        }
+    });
+
     // Listen for spacebar press to start listening.
     window.addEventListener('keydown', (e) => {
-        if (isLocked) {
-            if (e.key === 'Enter') {
-                unlockAssistant(passwordInput);
-                passwordInput = '';
-            } else if (e.key.length === 1) {
-                passwordInput += e.key;
-            }
-            return;
-        }
+        if (isLocked) return;
 
         if (e.code === 'Space' && !spacebarPressed) {
             e.preventDefault();
