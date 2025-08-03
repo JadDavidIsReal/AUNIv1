@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NOTE: API keys are placeholders and should be securely managed.
     // In a real application, these would be injected by a backend or a build process.
     const DEEPGRAM_API_KEY = 'cc186bd29115880294e05418214099ffff5497b8';
-    const OPENROUTER_API_KEY = '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';
+    let OPENROUTER_API_KEY = '';
     const OPENROUTER_MODEL = 'deepseek/deepseek-v2-chat';
 
     // --- DOM Elements ---
@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordContainer = document.getElementById('password-container');
     const passwordInput = document.getElementById('password-input');
     const passwordSubmit = document.getElementById('password-submit');
+    const apiKeyContainer = document.getElementById('api-key-container');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const apiKeySubmit = document.getElementById('api-key-submit');
     const userCommandDisplay = document.getElementById('user-command');
     const assistantResponseContainer = document.getElementById('assistant-response-container');
     const assistantResponseDisplay = document.getElementById('assistant-response');
@@ -66,19 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const unlockAssistant = () => {
         const password = passwordInput.value;
         if (password === '123123') {
-            isLocked = false;
-            orb.classList.remove('locked');
             passwordContainer.style.display = 'none';
-            // Asynchronously get microphone access when the page loads.
-            getMicrophone().then(mic => {
-                if (mic) {
-                    microphone = mic;
-                    orb.classList.add('ready');
-                    displayError("Hold spacebar to talk."); // Initial prompt
-                    setTimeout(() => resetUI(true), 3000);
-                }
-                // If mic is null, getMicrophone() already displayed an error.
-            });
+            apiKeyContainer.style.display = 'flex';
+            displayError("Enter your OpenRouter API Key.");
         } else {
             orb.classList.add('disturbed');
             setTimeout(() => {
@@ -86,6 +79,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 300);
             displayError("Incorrect password.");
             passwordInput.value = '';
+        }
+    };
+
+    const validateApiKey = async () => {
+        const key = apiKeyInput.value;
+        if (!key) {
+            displayError("API key cannot be empty.");
+            return;
+        }
+
+        // Simple validation: make a test request to OpenRouter
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/models", {
+                headers: {
+                    "Authorization": `Bearer ${key}`,
+                }
+            });
+            if (response.ok) {
+                OPENROUTER_API_KEY = key;
+                isLocked = false;
+                orb.classList.remove('locked');
+                apiKeyContainer.style.display = 'none';
+                getMicrophone().then(mic => {
+                    if (mic) {
+                        microphone = mic;
+                        orb.classList.add('ready');
+                        displayError("Hold spacebar to talk.");
+                        setTimeout(() => resetUI(true), 3000);
+                    }
+                });
+            } else {
+                throw new Error("Invalid API Key");
+            }
+        } catch (error) {
+            orb.classList.add('disturbed');
+            setTimeout(() => {
+                orb.classList.remove('disturbed');
+            }, 300);
+            displayError("Invalid API Key.");
+            apiKeyInput.value = '';
         }
     };
 
@@ -313,6 +346,13 @@ document.addEventListener('DOMContentLoaded', () => {
     passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             unlockAssistant();
+        }
+    });
+
+    apiKeySubmit.addEventListener('click', validateApiKey);
+    apiKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            validateApiKey();
         }
     });
 
