@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * Handles potential errors if the SDK fails to load or initialize.
      */
     try {
+        if (!window.deepgram) {
+            throw new Error("Deepgram SDK not loaded.");
+        }
         const { createClient } = window.deepgram;
         deepgramClient = createClient(DEEPGRAM_API_KEY);
     } catch (error) {
